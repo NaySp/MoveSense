@@ -67,6 +67,10 @@ Para medir el progreso y el desempeño del modelo, utilizaremos:
 
 Actualmente se han recopilado:
 
+Link del dataset: 
+
+https://drive.google.com/drive/folders/1KGiezhSh1gUQatXimF124qroUoBy3VGR?usp=sharing
+
 - Videos grabados por el equipo simulando distintas actividades.
 - Datos de puntos clave obtenidos con **MediaPipe Pose**, incluyendo coordenadas 2D de hombros, codos, rodillas, tobillos, etc.
 - Anotaciones semiautomáticas y manuales por cada segmento del video.
