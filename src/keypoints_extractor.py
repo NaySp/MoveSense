@@ -4,8 +4,11 @@ import json
 import mediapipe as mp
 from tqdm import tqdm
 
-VIDEO_DIR = "../data/raw/"  
-OUTPUT_DIR = "../data/processed/"
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+VIDEO_DIR = os.path.join(SCRIPT_DIR, "..", "data", "raw")
+OUTPUT_DIR = os.path.join(SCRIPT_DIR, "..", "data", "processed")
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
@@ -16,15 +19,24 @@ video_files = [f for f in os.listdir(VIDEO_DIR) if f.endswith(".mp4")]
 
 print(f"Procesando {len(video_files)} videos...")
 
+video_files = [f for f in os.listdir(VIDEO_DIR) if f.endswith(".mp4")]
+print(f"Procesando {len(video_files)} videos...")
+
 for filename in tqdm(video_files):
     filepath = os.path.join(VIDEO_DIR, filename)
     label = filename.split("_")[0].lower()
 
     cap = cv2.VideoCapture(filepath)
-    frame_idx = 0
-    keypoints_data = []
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    duration = frame_count / fps
 
-    while cap.isOpened():
+    print(f"\n{filename} | Duración: {duration:.2f}s | FPS: {fps} | Frames: {frame_count}")
+
+    keypoints_data = []
+    frame_idx = 0
+
+    while cap.isOpened() and frame_idx < frame_count:
         success, frame = cap.read()
         if not success:
             break
@@ -56,4 +68,4 @@ for filename in tqdm(video_files):
     with open(output_file, "w") as f:
         json.dump(keypoints_data, f, indent=2)
 
-print("✅ Extracción finalizada. Archivos guardados en:", OUTPUT_DIR)
+print("Extracción finalizada. Archivos guardados en:", OUTPUT_DIR)
