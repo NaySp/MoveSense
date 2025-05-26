@@ -9,15 +9,19 @@ from math import acos, degrees
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 JSON_DIR = os.path.join(SCRIPT_DIR, "..", "data", "processed")
-OUTPUT_CSV = os.path.join(SCRIPT_DIR, "..", "data", "annotations","keypoints_dataset.csv")
+OUTPUT_CSV = os.path.join(SCRIPT_DIR, "..", "data", "annotations", "keypoints_dataset.csv")
 
-def json_to_dataframe(json_path):
+def json_to_dataframe(json_path, origen):
     with open(json_path) as f:
         data = json.load(f)
 
     rows = []
     for entry in data:
-        row = {'frame': entry['frame'], 'label': entry['label']}
+        row = {
+            'frame': entry['frame'],
+            'label': entry['label'],
+            'origen': origen
+        }
         for point_id, values in entry['keypoints'].items():
             for coord, value in values.items():
                 row[f"{point_id}_{coord}"] = value
@@ -49,7 +53,8 @@ all_dfs = []
 
 for file in os.listdir(JSON_DIR):
     if file.endswith(".json"):
-        df = json_to_dataframe(os.path.join(JSON_DIR, file))
+        video_name = os.path.splitext(file)[0]  # sin .json
+        df = json_to_dataframe(os.path.join(JSON_DIR, file), origen=video_name)
         all_dfs.append(df)
 
 df_all = pd.concat(all_dfs, ignore_index=True)
@@ -64,7 +69,7 @@ df_all["angulo_codo_izquierdo"] = angulo(df_all, "point_11", "point_13", "point_
 df_all["angulo_rodilla_izquierda"] = angulo(df_all, "point_23", "point_25", "point_27")
 
 keypoint_cols = [col for col in df_all.columns if "_x" in col or "_y" in col or "_z" in col or "_vis" in col]
-df_model = df_all.drop(columns=keypoint_cols + ["frame"])
+df_model = df_all.drop(columns=keypoint_cols + ["frame"])  # df_model lo puedes usar para entrenamiento
 
 df_all.to_csv(OUTPUT_CSV, index=False)
 print(f"\nDataset final guardado en: {OUTPUT_CSV}")
