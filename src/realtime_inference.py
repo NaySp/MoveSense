@@ -1,17 +1,18 @@
+import os
 import cv2
 import numpy as np
+import pandas as pd
 import mediapipe as mp
 from joblib import load
 from collections import deque
-import pandas as pd
 
-model = load("../demo/logistic_pose_model.pkl")
-scaler = load("../demo/scaler.pkl")
-
-import os
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(SCRIPT_DIR, "..", "demo", "gradientboost_pose_model.pkl")
+SCALER_PATH = os.path.join(SCRIPT_DIR, "..", "demo", "scaler.pkl")
 FEATURES_PATH = os.path.join(SCRIPT_DIR, "..", "demo", "feature_names.txt")
 
+model = load(MODEL_PATH)
+scaler = load(SCALER_PATH)
 with open(FEATURES_PATH) as f:
     expected_features = [line.strip() for line in f]
 
@@ -33,14 +34,12 @@ def extract_features(landmarks):
         cosine = np.dot(ba, bc) / (np.linalg.norm(ba) * np.linalg.norm(bc) + 1e-6)
         return np.degrees(np.arccos(np.clip(cosine, -1.0, 1.0)))
 
-    features = {
+    return {
         "distancia_cadera_rodilla": distancia(punto(23), punto(25)),
         "distancia_hombro_codo": distancia(punto(11), punto(13)),
         "angulo_codo_izquierdo": angulo(punto(11), punto(13), punto(15)),
         "angulo_rodilla_izquierda": angulo(punto(23), punto(25), punto(27)),
     }
-
-    return features
 
 cap = cv2.VideoCapture(0)
 print("Cámara activada. Presiona 'q' para salir.")
@@ -64,13 +63,8 @@ while cap.isOpened():
             }
 
             combined = {feat: 0.0 for feat in expected_features}
-
-            for k, v in feats.items():
-                if k in combined:
-                    combined[k] = v
-            for k, v in delta_feats.items():
-                if k in combined:
-                    combined[k] = v
+            combined.update({k: v for k, v in feats.items() if k in combined})
+            combined.update({k: v for k, v in delta_feats.items() if k in combined})
 
             X_input = pd.DataFrame([combined])[expected_features]
             X_scaled = scaler.transform(X_input)
