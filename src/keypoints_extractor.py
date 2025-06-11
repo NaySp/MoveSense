@@ -15,11 +15,9 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 mp_pose = mp.solutions.pose
 pose = mp_pose.Pose(static_image_mode=False)
 
-video_files = [f for f in os.listdir(VIDEO_DIR) if f.endswith(".mp4")]
+interval_seconds = 1.0
 
-print(f"Procesando {len(video_files)} videos...")
-
-video_files = [f for f in os.listdir(VIDEO_DIR) if f.endswith(".mp4")]
+video_files = [f for f in os.listdir(VIDEO_DIR) if f.endswith((".mp4", ".MOV"))]
 print(f"Procesando {len(video_files)} videos...")
 
 for filename in tqdm(video_files):
@@ -30,13 +28,15 @@ for filename in tqdm(video_files):
     fps = cap.get(cv2.CAP_PROP_FPS)
     frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     duration = frame_count / fps
+    frame_interval = int(fps * interval_seconds)
 
-    print(f"\n{filename} | Duración: {duration:.2f}s | FPS: {fps} | Frames: {frame_count}")
+    print(f"\n{filename} | Duración: {duration:.2f}s | FPS: {fps:.2f} | Frames: {frame_count} | Intervalo: {frame_interval} frames")
 
     keypoints_data = []
     frame_idx = 0
 
-    while cap.isOpened() and frame_idx < frame_count:
+    while cap.isOpened():
+        cap.set(cv2.CAP_PROP_POS_FRAMES, frame_idx)
         success, frame = cap.read()
         if not success:
             break
@@ -56,11 +56,12 @@ for filename in tqdm(video_files):
 
             keypoints_data.append({
                 "frame": frame_idx,
+                "time_seconds": round(frame_idx / fps, 2),
                 "label": label,
                 "keypoints": keypoints
             })
 
-        frame_idx += 1
+        frame_idx += frame_interval
 
     cap.release()
 
@@ -68,4 +69,4 @@ for filename in tqdm(video_files):
     with open(output_file, "w") as f:
         json.dump(keypoints_data, f, indent=2)
 
-print("Extracción finalizada. Archivos guardados en:", OUTPUT_DIR)
+print("\nExtracción finalizada. Archivos guardados en:", OUTPUT_DIR)
