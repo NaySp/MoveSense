@@ -66,13 +66,13 @@ def drop_highly_correlated(df, corr_matrix, threshold=0.98):
     print(f"\n🧹 Columnas eliminadas por alta correlación: {len(to_drop)}")
     return df.drop(columns=list(to_drop)), to_drop
 
-def remove_outliers(df):
+def remove_outliers(df, iqr_multiplier=3):
     before = df.shape[0]
     for col in df.select_dtypes(include=[np.number]).columns:
         Q1 = df[col].quantile(0.25)
         Q3 = df[col].quantile(0.75)
         IQR = Q3 - Q1
-        mask = (df[col] >= Q1 - 1.5 * IQR) & (df[col] <= Q3 + 1.5 * IQR)
+        mask = (df[col] >= Q1 - iqr_multiplier * IQR) & (df[col] <= Q3 + iqr_multiplier * IQR)
         df = df[mask]
     after = df.shape[0]
     print(f"\nOutliers eliminados: {before - after} filas")
