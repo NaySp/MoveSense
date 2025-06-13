@@ -1,3 +1,4 @@
+time_seconds
 point_0_x
 point_0_y
 point_0_z
@@ -11,6 +12,7 @@ point_12_z
 point_13_x
 point_13_y
 point_13_z
+point_14_x
 point_14_z
 point_15_x
 point_15_y
@@ -31,8 +33,10 @@ point_26_z
 point_27_x
 point_27_y
 point_27_z
+point_28_x
 point_28_y
 point_28_z
+point_29_y
 point_31_x
 point_31_y
 point_31_z
@@ -40,8 +44,10 @@ point_32_x
 point_32_y
 point_32_z
 distancia_cadera_rodilla
+distancia_hombro_codo
 angulo_codo_izquierdo
 angulo_rodilla_izquierda
 delta_distancia_cadera_rodilla
 delta_angulo_codo_izquierdo
 delta_angulo_rodilla_izquierda
+delta_distancia_hombro_codo
