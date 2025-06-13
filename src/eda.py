@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+from sklearn.utils import resample
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = os.path.join(SCRIPT_DIR, "..", "data", "annotations", "keypoints_dataset.csv")
@@ -54,16 +55,22 @@ def plot_correlation_heatmap(df, top_n=20):
     plt.show()
     return corr, num_cols
 
-def drop_highly_correlated(df, corr_matrix, threshold=0.98):
+def drop_highly_correlated(df, threshold=0.995, protected_cols=None):
+    if protected_cols is None:
+        protected_cols = set()
+    corr_matrix = df.select_dtypes(include=[float, int]).corr().abs()
     to_drop = set()
     cols = corr_matrix.columns
     for i in range(len(cols)):
         for j in range(i + 1, len(cols)):
-            if abs(corr_matrix.iloc[i, j]) > threshold:
+            value = corr_matrix.iloc[i, j]
+            if value > threshold:
                 col_j = cols[j]
-                if col_j not in PROTECTED_COLS:
+                if col_j not in protected_cols:
                     to_drop.add(col_j)
-    print(f"\n🧹 Columnas eliminadas por alta correlación: {len(to_drop)}")
+    print(f"\n🧹 Columnas eliminadas por alta correlación (> {threshold}): {len(to_drop)}")
+    if to_drop:
+        print("Eliminadas:", sorted(to_drop))
     return df.drop(columns=list(to_drop)), to_drop
 
 def remove_outliers(df, iqr_multiplier=3):
@@ -78,6 +85,18 @@ def remove_outliers(df, iqr_multiplier=3):
     print(f"\nOutliers eliminados: {before - after} filas")
     return df
 
+def oversample_classes(df):
+    max_count = df['label'].value_counts().max()
+    dfs = []
+    for label in df['label'].unique():
+        df_label = df[df['label'] == label]
+        df_resampled = resample(df_label, replace=True, n_samples=max_count, random_state=42)
+        dfs.append(df_resampled)
+    df_balanced = pd.concat(dfs)
+    print("\n📈 Dataset balanceado por sobremuestreo:")
+    print(df_balanced['label'].value_counts())
+    return df_balanced
+
 def check_and_save(df, output_path):
     required = list(PROTECTED_COLS)
     missing = [col for col in required if col not in df.columns]
@@ -85,7 +104,7 @@ def check_and_save(df, output_path):
         print(f"Faltan columnas esenciales para entrenamiento: {missing}")
     else:
         df.to_csv(output_path, index=False)
-        print(f"\nDataset limpio guardado en: {output_path}")
+        print(f"\n✅ Dataset limpio guardado en: {output_path}")
 
 def main():
     df = load_data(DATA_PATH)
@@ -96,9 +115,9 @@ def main():
     plot_class_distribution(df)
 
     plot_boxplots(df)
-    corr_matrix, num_cols = plot_correlation_heatmap(df)
+    plot_correlation_heatmap(df)
 
-    df_reduced, dropped_cols = drop_highly_correlated(df, corr_matrix)
+    df_reduced, dropped_cols = drop_highly_correlated(df, threshold=0.995, protected_cols=PROTECTED_COLS)
     print(f"Shape después de eliminar correlación: {df_reduced.shape}")
 
     df_clean = remove_outliers(df_reduced)
@@ -106,10 +125,12 @@ def main():
 
     print("\nConteo de clases después de limpieza:")
     print(df_clean['label'].value_counts())
+    plot_class_distribution(df_clean, title="Distribución de clases después de limpieza")
 
-    plot_class_distribution(df_clean, title="Distribución de clases final")
+    df_balanced = oversample_classes(df_clean)
+    plot_class_distribution(df_balanced, title="Distribución de clases balanceada")
 
-    check_and_save(df_clean, OUTPUT_PATH)
+    check_and_save(df_balanced, OUTPUT_PATH)
 
 if __name__ == "__main__":
     main()

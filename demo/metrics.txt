@@ -1,8 +1,10 @@
               precision    recall  f1-score   support
 
-     girando       0.83      1.00      0.91         5
-  sentandose       0.00      0.00      0.00         1
+   caminando       1.00      1.00      1.00        11
+     girando       0.91      1.00      0.95        10
+   parandose       1.00      1.00      1.00        11
+  sentandose       1.00      0.91      0.95        11
 
-    accuracy                           0.83         6
-   macro avg       0.42      0.50      0.45         6
-weighted avg       0.69      0.83      0.76         6
+    accuracy                           0.98        43
+   macro avg       0.98      0.98      0.98        43
+weighted avg       0.98      0.98      0.98        43

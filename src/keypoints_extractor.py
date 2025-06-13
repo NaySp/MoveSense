@@ -7,7 +7,7 @@ from tqdm import tqdm
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-VIDEO_DIR = os.path.join(SCRIPT_DIR, "..", "data", "raw")
+VIDEO_DIR = os.path.join(SCRIPT_DIR, "..", "data", "raw_30fps")
 OUTPUT_DIR = os.path.join(SCRIPT_DIR, "..", "data", "processed")
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
